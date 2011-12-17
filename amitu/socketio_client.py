@@ -114,7 +114,7 @@ class SocketIOClient(amitu.websocket_client.WebSocket):
         super(SocketIOClient, self).__init__(
             '%s://%s:%s/socket.io/1/websocket/%s' % (
                 self.protocol, self.server, self.port, hskey
-            )
+            ), *self.args, **self.kw
         )
         super(SocketIOClient, self).run()
 
