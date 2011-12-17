@@ -121,7 +121,7 @@ class SocketIOClient(amitu.websocket_client.WebSocket):
     def on(self, name, callback):
         self.handlers.setdefault(name, []).append(callback)
 
-    def _fire(self, name, *args, **kw):
+    def fire(self, name, *args, **kw):
         for callback in self.handlers.get(name, []):
             callback(*args, **kw)
 
@@ -129,15 +129,15 @@ class SocketIOClient(amitu.websocket_client.WebSocket):
         self.send(EventPacket(name=name, args=[args]))
 
     def onopen(self):
-        self._fire("connect")
+        self.fire("connect")
 
     def onmessage(self, msg):
-        self._fire("message", msg)
+        self.fire("message", msg)
         packet = parse_message(msg)
         if isinstance(packet, HeartbeatPacket):
             self.send(HeartbeatPacket())
         if isinstance(packet, EventPacket):
-            self._fire(packet.name, packet.args[0])
+            self.fire(packet.name, packet.args[0])
 
     def onclose(self):
         print "onclose"
