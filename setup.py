@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name = "amitu-websocket-client",
     description = "Eventlet based websocket client",
-    version = "0.1.0",
+    version = "0.1.1",
     author = 'Amit Upadhyay',
     author_email = "upadhyay@gmail.com",
 
