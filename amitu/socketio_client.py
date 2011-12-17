@@ -11,7 +11,7 @@ class SocketIOPacket(object):
             self.__class__.__name__, self.id, self.endpoint, self.data
         )
 
-    def to_packet(self):
+    def __unicode__(self):
         packet = u"%s:%s:%s" % (self.type, self.id, self.endpoint)
         if self.data is not None:
             packet += u":" + self.data
@@ -104,6 +104,7 @@ class SocketIOClient(amitu.websocket_client.WebSocket):
         self.args = args
         self.kw = kw
         self.protocol = protocol
+        self.handlers = {}
 
     def run(self):
         conn  = httplib.HTTPConnection(self.server + ":" + str(self.port))
@@ -117,15 +118,26 @@ class SocketIOClient(amitu.websocket_client.WebSocket):
         )
         super(SocketIOClient, self).run()
 
-    def on(self, p): pass
-    def emit(self, p, q): pass
+    def on(self, name, callback):
+        self.handlers.setdefault(name, []).append(callback)
+
+    def _fire(self, name, *args, **kw):
+        for callback in self.handlers.get(name, []):
+            callback(*args, **kw)
+
+    def emit(self, name, args):
+        self.send(EventPacket(name=name, args=[args]))
 
     def onopen(self):
-        print("opened!")
-        self.send('5:::{"name":"browser","args":["hammerlib:get_clientid:user_anon\u000d\u000a"]}')
+        self._fire("connect")
 
     def onmessage(self, msg):
-        print "onmessage:", parse_message(msg)
+        self._fire("message", msg)
+        packet = parse_message(msg)
+        if isinstance(packet, HeartbeatPacket):
+            self.send(HeartbeatPacket())
+        if isinstance(packet, EventPacket):
+            self._fire(packet.name, packet.args[0])
 
     def onclose(self):
         print "onclose"

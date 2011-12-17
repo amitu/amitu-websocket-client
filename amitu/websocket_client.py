@@ -114,7 +114,7 @@ class WebSocket(object):
                 buf += res
 
     def send(self, data):
-        self.sock.send('\x00' + data.encode("utf-8") + '\xff')
+        self.sock.send('\x00' + unicode(data).encode("utf-8") + '\xff')
 
     def onopen(self): pass
     def onmessage(self, message): pass
