@@ -1,38 +1,101 @@
-import amitu.websocket_client, httplib
+import amitu.websocket_client, httplib, json
 
-class SocketIOMessage(object):
-    Disconnect = "0"
-    Connect = "1"
-    Heartbeat = "2"
-    Message = "3"
-    JSONMessage = "4"
-    Event = "5"
-    ACK = "6"
-    Error = "7"
-    Noop = "8"
-
-    def __init__(self, raw):
-        parts = raw.split(":", 3)
-        self.type = parts[0]
-        self.id = parts[1]
-        self.endpoint = parts[2]
-        if len(parts) == 4:
-            self.data = parts[3]
-        else:
-            self.data = None
-
-    def type2name(self):
-        for k, v in SocketIOMessage.__dict__.items():
-            if v == self.type: return k
-        raise TypeError("Unknown type: %s" % self.type)
-
-    def __unicode__(self):
-        return u"%s id=<%s> endpoint=<%s> data=<%s>" % (
-            self.type2name(), self.id, self.endpoint, self.data
-        )
+class SocketIOPacket(object):
+    def __init__(self, id="", endpoint="", data=None):
+        self.id = id
+        self.endpoint = endpoint
+        self.data = data
 
     def __repr__(self):
-        return u"<SocketIOMessage: %s>" % self
+        return u"%s: id=<%s> endpoint=<%s> data=<%s>" % (
+            self.__class__.__name__, self.id, self.endpoint, self.data
+        )
+
+    def to_packet(self):
+        packet = u"%s:%s:%s" % (self.type, self.id, self.endpoint)
+        if self.data is not None:
+            packet += u":" + self.data
+        return packet
+
+class DisconnectPacket(SocketIOPacket):
+    type = "0"
+
+class ConnectPacket(SocketIOPacket):
+    type = "1"
+
+class HeartbeatPacket(SocketIOPacket):
+    type = "2"
+
+class MessagePacket(SocketIOPacket):
+    type = "3"
+
+class JSONMessagePacket(SocketIOPacket):
+    type = "4"
+    def __init__(self, id="", endpoint="", data=None, payload=None):
+        if payload is None:
+            payload = json.loads(data)
+        if data is None:
+            data = json.dumps(payload)
+        super(JSONMessagePacket, self).__init__(id, endpoint, data)
+        self.payload = payload
+
+class EventPacket(SocketIOPacket):
+    type = "5"
+    def __init__(self, id="", endpoint="", data=None, name=None, args=None):
+        if name is None:
+            d = json.loads(data)
+            name = d["name"]
+            args = d["args"]
+        if data is None:
+            d = {"name": name, "args": args}
+            data = json.dumps(d)
+        super(EventPacket, self).__init__(id, endpoint, data)
+        self.name, self.args = name, args
+
+    def __repr__(self):
+        return u"%s: id=<%s> endpoint=<%s> name=<%s> args=<%s>" % (
+            self.__class__.__name__, self.id, self.endpoint,
+            self.name, self.args
+        )
+
+class ACKPacket(SocketIOPacket): 
+    type = "6"
+
+class ErrorPacket(SocketIOPacket):
+    type = "7"
+    def __init__(
+        self, id="", endpoint="", data=None, reason=None, advice=None
+    ):
+        if reason is None:
+            reason, advice = data.split("+", 1)
+        if data is None:
+            data = u"%s:%s" % (reason, advice)
+        super(ErrorPacket, self).__init__(id, endpoint, data)
+        self.reason, self.advice = reason, advice
+
+    def __repr__(self):
+        return u"%s: id=<%s> endpoint=<%s> reason=<%s> advice=<%s:%s>" % (
+            self.__class__.__name__, self.id, self.endpoint,
+            self.reason, self.advice
+        )
+
+class NoopPacket(SocketIOPacket):
+    type = "8"
+
+def parse_message(raw):
+    parts = raw.split(":", 3)
+    type = parts[0]
+    id = parts[1]
+    endpoint = parts[2]
+    if len(parts) == 4:
+        data = parts[3]
+    else:
+        data = None
+    return {
+        "0": DisconnectPacket, "1": ConnectPacket, "2": HeartbeatPacket,
+        "3": MessagePacket, "4": JSONMessagePacket, "5": EventPacket,
+        "6": ACKPacket, "7": ErrorPacket, "8": NoopPacket,
+    }[type](id, endpoint, data)
 
 class SocketIOClient(amitu.websocket_client.WebSocket):
     def __init__(self, server, port, protocol="ws", *args, **kw):
@@ -62,7 +125,7 @@ class SocketIOClient(amitu.websocket_client.WebSocket):
         self.send('5:::{"name":"browser","args":["hammerlib:get_clientid:user_anon\u000d\u000a"]}')
 
     def onmessage(self, msg):
-        print "onmessage:", SocketIOMessage(msg)
+        print "onmessage:", parse_message(msg)
 
     def onclose(self):
         print "onclose"
