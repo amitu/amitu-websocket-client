@@ -1,3 +1,25 @@
+"""
+SocketIOClient
+==============
+
+Example::
+
+    from amitu.socketio_client import SocketIOClient
+
+    sock = SocketIOClient("localhost", 8081)
+
+    def my_connect():
+        print("opened!")
+        sock.emit("browser", "data!")
+        sock.on("server", on_server)
+
+    def on_server(data):
+        print data
+
+    sock.on("connect", my_connect)
+    sock.run()
+
+"""
 import amitu.websocket_client, httplib, json
 
 class SocketIOPacket(object):
@@ -116,7 +138,8 @@ class SocketIOClient(amitu.websocket_client.WebSocket):
                 self.protocol, self.server, self.port, hskey
             ), *self.args, **self.kw
         )
-        super(SocketIOClient, self).run()
+        while True:
+            super(SocketIOClient, self).run()
 
     def on(self, name, callback):
         self.handlers.setdefault(name, []).append(callback)

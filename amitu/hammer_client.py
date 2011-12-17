@@ -1,5 +1,30 @@
+"""
+HammerClient
+============
+
+Example::
+
+    from amitu.hammer_client import HammerClient
+
+    hammerlib = HammerClient("localhost", 8081, sessionid="foo")
+
+    def opened(cmd, type, data):
+        print "opened"
+        hammerlib.send("pingpong", "ping", {"text": "asd"})
+        print "sent ping"
+
+    def pong(cmd, type, data):
+        print "pong: ", data["text"]
+
+    hammerlib.bind("hammerlib", "opened", opened)
+    hammerlib.bind("pingpong", "pong", pong)
+
+    hammerlib.run()
+
+"""
 from amitu.socketio_client import SocketIOClient
 import json
+
 
 class HammerClient(object):
     def __init__(self, server, port, sessionid="", *args, **kw):
