@@ -109,10 +109,9 @@ class WebSocket(object):
                 res = self.sock.recv(2048)
             except socket.timeout:
                 self.ontimeout()
-
-            if not res: return self.onclose()
-
-            buf += res
+            else:
+                if not res: return self.onclose()
+                buf += res
 
     def send(self, data):
         self.sock.send('\x00' + data.encode("utf-8") + '\xff')
