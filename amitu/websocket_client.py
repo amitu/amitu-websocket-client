@@ -14,14 +14,15 @@ class WebSocketError(Exception):
 
 class WebSocket(object):
     def __init__(
-        self, url, ca_certs=None, cert_reqs=ssl.CERT_NONE, headers=None, 
-        protocol=None
+        self, url, ca_certs=None, cert_reqs=ssl.CERT_NONE, headers=None,
+        protocol=None, timeout=None
     ):
         self.url = url
         self.ca_certs = ca_certs
         self.cert_reqs = cert_reqs
         self.headers = headers or {}
         self.protocol = protocol
+        self.timeout = timeout
 
     def _connect_and_send_handshake(self):
         params = urlparse.urlparse(self.url)
@@ -54,6 +55,7 @@ class WebSocket(object):
             self.headers["Sec-WebSocket-Protocol"] = self.protocol
 
         self.sock.connect((params.hostname, params.port))
+        self.sock.settimeout(self.timeout)
 
         self.sock.send(
             (
@@ -102,7 +104,11 @@ class WebSocket(object):
 
         while True:
             buf = self._consume_frames(buf)
-            res = self.sock.recv(2048)
+
+            try:
+                res = self.sock.recv(2048)
+            except socket.timeout:
+                self.ontimeout()
 
             if not res: return self.onclose()
 
@@ -115,3 +121,4 @@ class WebSocket(object):
     def onmessage(self, message): pass
     def onclose(self): pass
     def onerror(self, error): pass
+    def ontimeout(self): pass
