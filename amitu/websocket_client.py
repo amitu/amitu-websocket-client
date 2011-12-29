@@ -140,6 +140,8 @@ class WebSocket(object):
         if len(buf) == 0:
             challenge = self.sock.recv(16)
             print "challenge %s" % challenge
+        if len(buf) > 16:
+            return buf[16:]
         return buf
 
     def _consume_frames(self, buf):
