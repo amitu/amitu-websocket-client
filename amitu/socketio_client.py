@@ -80,7 +80,7 @@ class EventPacket(SocketIOPacket):
             self.name, self.args
         )
 
-class ACKPacket(SocketIOPacket): 
+class ACKPacket(SocketIOPacket):
     type = "6"
 
 class ErrorPacket(SocketIOPacket):
@@ -132,7 +132,6 @@ class SocketIOClient(amitu.websocket_client.WebSocket):
         conn  = httplib.HTTPConnection(self.server + ":" + str(self.port))
         conn.request('POST','/socket.io/1/')
         r = conn.getresponse().read()
-        print r
         hskey  = r.split(":")[0]
 
         super(SocketIOClient, self).__init__(
@@ -156,8 +155,10 @@ class SocketIOClient(amitu.websocket_client.WebSocket):
         self.fire("connect")
 
     def onmessage(self, msg):
+        print msg
         self.fire("message", msg)
         packet = parse_message(msg)
+        print packet
         if isinstance(packet, HeartbeatPacket):
             self.send(HeartbeatPacket())
         if isinstance(packet, EventPacket):
