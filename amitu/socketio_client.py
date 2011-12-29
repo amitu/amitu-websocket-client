@@ -130,7 +130,7 @@ class SocketIOClient(amitu.websocket_client.WebSocket):
 
     def run(self):
         conn  = httplib.HTTPConnection(self.server + ":" + str(self.port))
-        conn.request('POST','/socket.io/1/')
+        conn.request('GET','/socket.io/1/')
         r = conn.getresponse().read()
         hskey  = r.split(":")[0]
 
