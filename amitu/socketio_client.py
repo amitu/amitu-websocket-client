@@ -131,15 +131,16 @@ class SocketIOClient(amitu.websocket_client.WebSocket):
     def run(self):
         conn  = httplib.HTTPConnection(self.server + ":" + str(self.port))
         conn.request('POST','/socket.io/1/')
-        hskey  = conn.getresponse().read().split(":")[0]
+        r = conn.getresponse().read()
+        print r
+        hskey  = r.split(":")[0]
 
         super(SocketIOClient, self).__init__(
             '%s://%s:%s/socket.io/1/websocket/%s' % (
                 self.protocol, self.server, self.port, hskey
             ), *self.args, **self.kw
         )
-        while True:
-            super(SocketIOClient, self).run()
+        super(SocketIOClient, self).run()
 
     def on(self, name, callback):
         self.handlers.setdefault(name, []).append(callback)

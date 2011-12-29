@@ -38,7 +38,8 @@ class HammerClient(object):
         self.bind("hammerlib", "connected", self._connected)
 
     def run(self):
-        self.sock.run()
+        while True:
+            self.sock.run()
 
     def bind(self, cmd, type, callback):
         self.binds.setdefault("%s:%s" % (cmd, type), []).append(callback)
