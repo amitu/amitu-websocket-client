@@ -50,6 +50,8 @@ class WebSocket(object):
         self.headers["Connection"] = "Upgrade"
         self.headers["Host"] = host
         self.headers["Origin"] = origin
+        self.headers["Sec-WebSocket-Key1"] = "18x 6]8vM;54 *(5:  {   U1]8  z [  8"
+        self.headers["Sec-WebSocket-Key2"] = "1_ tx7X d  <  nw  334J702) 7]o}` 0"
 
         if self.protocol:
             self.headers["Sec-WebSocket-Protocol"] = self.protocol
@@ -59,7 +61,7 @@ class WebSocket(object):
 
         self.sock.send(
             (
-                u"GET %s HTTP/1.1\r\n%s\r\n\r\n" % (
+                u"GET %s HTTP/1.1\r\n%s\r\n\r\nTm[K T2u" % (
                     path, u"\r\n".join(
                         [
                             u"%s: %s" % (k, self.headers[k])
@@ -81,26 +83,26 @@ class WebSocket(object):
         headers = Message(StringIO(headers))
 
         if (
-            status_line != 'HTTP/1.1 101 Web Socket Protocol Handshake'
+            (not status_line.startswith('HTTP/1.1 101'))
             or headers.get('Connection') != 'Upgrade'
             or headers.get('Upgrade') != 'WebSocket'
         ):
             raise WebSocketError('Invalid handshake')
 
-        return buf
+        return buf.split("fQJ,fN/4F4!~K~MH")[-1]
 
     def _consume_frames(self, buf):
         while FRAME_END in buf:
             frame, buf = buf.split(FRAME_END, 1)
             if frame[0] != FRAME_START: raise WebSocketError("Invalid frame")
-            self.onmessage(frame[1:])
+            self._fire_onmessage(frame[1:])
         return buf
 
     def run(self):
         self._connect_and_send_handshake()
         buf = self._receive_handshake()
 
-        self.onopen()
+        self._fire_onopen()
 
         while True:
             buf = self._consume_frames(buf)
@@ -110,11 +112,17 @@ class WebSocket(object):
             except socket.timeout:
                 self.ontimeout()
             else:
-                if not res: return self.onclose()
+                if not res: return self._fire_onclose()
                 buf += res
 
-    def send(self, data):
+    def send(self, data): self._send(data)
+
+    def _send(self, data):
         self.sock.send('\x00' + unicode(data).encode("utf-8") + '\xff')
+
+    def _fire_onopen(self): self.onopen()
+    def _fire_onmessage(self, data): self.onmessage(data)
+    def _fire_onclose(self): self.onclose()
 
     def onopen(self): pass
     def onmessage(self, message): pass
