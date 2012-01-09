@@ -155,16 +155,13 @@ class SocketIOClient(amitu.websocket_client.WebSocket):
         self.fire("connect")
 
     def onmessage(self, msg):
-        print msg
         self.fire("message", msg)
         packet = parse_message(msg)
-        print packet
         if isinstance(packet, HeartbeatPacket):
             self.send(HeartbeatPacket())
         if isinstance(packet, EventPacket):
             self.fire(packet.name, packet.args[0])
 
-    def onclose(self):
-        print "onclose"
+    def onclose(self): pass
 
     def ontimeout(self): pass
