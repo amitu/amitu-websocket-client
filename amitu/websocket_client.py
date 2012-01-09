@@ -127,8 +127,6 @@ class WebSocket(object):
         headers, buf = buf.split("\r\n\r\n", 1)
         status_line, headers = headers.split("\r\n", 1)
 
-        print "BUF %s" % buf
-
         headers = Message(StringIO(headers))
         if (
             status_line != 'HTTP/1.1 101 WebSocket Protocol Handshake'
@@ -139,10 +137,9 @@ class WebSocket(object):
 
         if len(buf) == 0:
             challenge = self.sock.recv(16)
-            print "challenge %s" % challenge
         if len(buf) > 16:
             return buf[16:]
-        return buf
+        return ""
 
     def _consume_frames(self, buf):
         while FRAME_END in buf:
@@ -172,6 +169,7 @@ class WebSocket(object):
 
     def onopen(self): pass
     def onmessage(self, message): pass
-    def onclose(self): pass
+    def onclose(self): 
+        self.sock.close()
     def onerror(self, error): pass
     def ontimeout(self): pass
