@@ -162,6 +162,10 @@ class SocketIOClient(amitu.websocket_client.WebSocket):
         if isinstance(packet, EventPacket):
             self.fire(packet.name, packet.args[0])
 
-    def onclose(self): pass
-
-    def ontimeout(self): pass
+    def ontimeout(self):
+        handler = self.handlers.get("timeout")
+        if handler:
+            handler()
+        else:
+            self.sock.close()
+            exit(1)
