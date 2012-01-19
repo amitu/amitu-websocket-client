@@ -136,11 +136,9 @@ class WebSocket(object):
         ):
             raise WebSocketError('Invalid handshake')
 
-        if len(buf) == 0:
-            challenge = self.sock.recv(16)
         if len(buf) > 16:
             return buf[16:]
-        if len(buf) < 16:
+        elif len(buf) < 16:
             challenge = self.sock.recv(16 - len(buf)*2)
         return ""
 
