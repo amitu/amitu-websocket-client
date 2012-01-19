@@ -120,8 +120,9 @@ class WebSocket(object):
         )
 
     def _receive_handshake(self):
+        buf = ""
         while True:
-            buf = self.sock.recv(2048)
+            buf += self.sock.recv(2048)
             if "\r\n\r\n" in buf: break
 
         headers, buf = buf.split("\r\n\r\n", 1)
@@ -139,6 +140,8 @@ class WebSocket(object):
             challenge = self.sock.recv(16)
         if len(buf) > 16:
             return buf[16:]
+        if len(buf) < 16:
+            challenge = self.sock.recv(16 - len(buf)*2)
         return ""
 
     def _consume_frames(self, buf):
