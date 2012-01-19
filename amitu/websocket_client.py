@@ -146,7 +146,7 @@ class WebSocket(object):
         while FRAME_END in buf:
             frame, buf = buf.split(FRAME_END, 1)
             if frame[0] != FRAME_START: 
-                raise WebSocketError("Invalid frame %s)" % str(buf))
+                raise WebSocketError("Invalid frame %s)" % (buf))
             self.onmessage(frame[1:])
         return buf
 
