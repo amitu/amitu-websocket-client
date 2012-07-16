@@ -20,7 +20,10 @@ Example::
     sock.run()
 
 """
-import amitu.websocket_client, httplib, json
+import amitu.websocket_client
+import httplib
+import json
+
 
 class SocketIOPacket(object):
     def __init__(self, id="", endpoint="", data=None):
@@ -39,20 +42,26 @@ class SocketIOPacket(object):
             packet += u":" + self.data
         return packet
 
+
 class DisconnectPacket(SocketIOPacket):
     type = "0"
+
 
 class ConnectPacket(SocketIOPacket):
     type = "1"
 
+
 class HeartbeatPacket(SocketIOPacket):
     type = "2"
+
 
 class MessagePacket(SocketIOPacket):
     type = "3"
 
+
 class JSONMessagePacket(SocketIOPacket):
     type = "4"
+
     def __init__(self, id="", endpoint="", data=None, payload=None):
         if payload is None:
             payload = json.loads(data)
@@ -61,8 +70,10 @@ class JSONMessagePacket(SocketIOPacket):
         super(JSONMessagePacket, self).__init__(id, endpoint, data)
         self.payload = payload
 
+
 class EventPacket(SocketIOPacket):
     type = "5"
+
     def __init__(self, id="", endpoint="", data=None, name=None, args=None):
         if name is None:
             d = json.loads(data)
@@ -80,11 +91,14 @@ class EventPacket(SocketIOPacket):
             self.name, self.args
         )
 
+
 class ACKPacket(SocketIOPacket):
     type = "6"
 
+
 class ErrorPacket(SocketIOPacket):
     type = "7"
+
     def __init__(
         self, id="", endpoint="", data=None, reason=None, advice=None
     ):
@@ -101,8 +115,10 @@ class ErrorPacket(SocketIOPacket):
             self.reason, self.advice
         )
 
+
 class NoopPacket(SocketIOPacket):
     type = "8"
+
 
 def parse_message(raw):
     parts = raw.split(":", 3)
@@ -119,6 +135,7 @@ def parse_message(raw):
         "6": ACKPacket, "7": ErrorPacket, "8": NoopPacket,
     }[type](id, endpoint, data)
 
+
 class SocketIOClient(amitu.websocket_client.WebSocket):
     def __init__(self, server, port, protocol="ws", *args, **kw):
         self.server = server
@@ -129,10 +146,10 @@ class SocketIOClient(amitu.websocket_client.WebSocket):
         self.handlers = {}
 
     def run(self):
-        conn  = httplib.HTTPConnection(self.server + ":" + str(self.port))
-        conn.request('GET','/socket.io/1/')
+        conn = httplib.HTTPConnection(self.server + ":" + str(self.port))
+        conn.request('GET', '/socket.io/1/')
         r = conn.getresponse().read()
-        hskey  = r.split(":")[0]
+        hskey = r.split(":")[0]
 
         super(SocketIOClient, self).__init__(
             '%s://%s:%s/socket.io/1/websocket/%s' % (
@@ -175,8 +192,7 @@ import time
 import socket
 import threading
 from Queue import Queue
-from amitu.websocket_client import FRAME_START, FRAME_END
-from amitu.websocket_client import WebSocketError
+
 import logging
 logger = logging.getLogger(__name__)
 
