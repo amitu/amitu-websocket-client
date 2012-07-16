@@ -23,6 +23,13 @@ Example::
 import amitu.websocket_client
 import httplib
 import json
+import time
+import socket
+import threading
+from Queue import Queue
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 class SocketIOPacket(object):
@@ -187,14 +194,6 @@ class SocketIOClient(amitu.websocket_client.WebSocket):
         else:
             self.sock.close()
             exit(1)
-
-import time
-import socket
-import threading
-from Queue import Queue
-
-import logging
-logger = logging.getLogger(__name__)
 
 
 class ThreadedSocketIOClient(SocketIOClient):
