@@ -19,6 +19,9 @@ Example::
     sock.on("connect", my_connect)
     sock.run()
 
+
+See ThreadedSocketIOClient below for a different usage example.
+
 """
 import amitu.websocket_client
 import httplib
